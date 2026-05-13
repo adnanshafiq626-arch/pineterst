@@ -1,9 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AppLayout from '../components/AppLayout';
-import { motion } from 'motion/react';
-import { ArrowRight, TrendingUp, Grid, Search, BarChart3, Workflow } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowRight, TrendingUp, Grid, Search, BarChart3, Workflow, X, CheckCircle2 } from 'lucide-react';
 
 export default function Homepage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormState('submitting');
+    // Simulate API call
+    setTimeout(() => {
+      setFormState('success');
+    }, 1500);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    // Reset form after exit animation
+    setTimeout(() => setFormState('idle'), 300);
+  };
+
   return (
     <AppLayout>
       {/* Hero Section */}
@@ -30,7 +48,10 @@ export default function Homepage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <button className="bg-gray-900 text-white px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-800 transition-colors inline-flex items-center gap-2 shadow-sm">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-gray-900 text-white px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-800 transition-colors inline-flex items-center gap-2 shadow-sm"
+            >
               Request Access
               <ArrowRight size={20} />
             </button>
@@ -119,6 +140,93 @@ export default function Homepage() {
         </div>
       </section>
 
+      {/* Request Access Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-y-auto bg-black/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0"
+              onClick={closeModal}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl shadow-xl w-full max-w-md relative z-10 overflow-hidden"
+            >
+              <button 
+                onClick={closeModal}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="p-8">
+                {formState === 'success' ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">You're on the list!</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      Thanks! We are currently syncing with the Pinterest API. We will notify you once your research dashboard is ready.
+                    </p>
+                    <button 
+                      onClick={closeModal}
+                      className="mt-8 w-full bg-gray-100 text-gray-900 font-medium py-3 rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Request Access</h3>
+                    <p className="text-gray-500 mb-8">Join the waitlist to start using TrendCanvas for your Etsy research.</p>
+                    
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+                        <input 
+                          type="email" 
+                          id="email" 
+                          required
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
+                          placeholder="you@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="shop" className="block text-sm font-medium text-gray-700 mb-1.5">Etsy Shop URL</label>
+                        <input 
+                          type="url" 
+                          id="shop"
+                          required
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
+                          placeholder="https://etsy.com/shop/yourshop"
+                        />
+                      </div>
+                      
+                      <button 
+                        type="submit" 
+                        disabled={formState === 'submitting'}
+                        className="w-full bg-gray-900 text-white font-medium py-3.5 rounded-xl hover:bg-gray-800 transition-colors mt-4 disabled:bg-gray-400 disabled:cursor-not-allowed flex justify-center items-center"
+                      >
+                        {formState === 'submitting' ? (
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          'Join Waitlist'
+                        )}
+                      </button>
+                    </form>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 }
